@@ -16,7 +16,8 @@ from ..core.security import get_password_hash
 
 router = APIRouter()
 
-FACE_IMAGES_DIR = "storage/faces"
+# Use absolute path if environment variable is set, otherwise use relative path to new location
+FACE_IMAGES_DIR = os.environ.get("VMS_STORAGE_PATH") or os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "app", "storage", "faces"))
 os.makedirs(FACE_IMAGES_DIR, exist_ok=True)
 
 @router.post("/create-user", response_model=User)

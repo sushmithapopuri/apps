@@ -9,10 +9,12 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend/vms.db:/app/vms.db
-      - ./backend/app/storage/faces:/app/storage/faces
+      - ./app/vms.db:/app/vms.db
+      - ./app/storage/faces:/app/storage/faces
     environment:
       - DATABASE_URL=sqlite:////app/vms.db
+      - VMS_DB_PATH=/app/vms.db
+      - VMS_STORAGE_PATH=/app/storage/faces
     restart: always
 
   frontend:

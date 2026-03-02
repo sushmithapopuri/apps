@@ -9,6 +9,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     POETRY_VIRTUALENVS_CREATE=false \
     POETRY_NO_INTERACTION=1 \
     POETRY_CACHE_DIR='/var/cache/pypoetry'
+    \
+# Default absolute DB path for the application (can be overridden by docker-compose env)
+ENV VMS_DB_PATH=/app/vms.db
 
 # Install system dependencies required for building some Python packages
 RUN apt-get update && apt-get install -y --no-install-recommends \

@@ -17,6 +17,9 @@ backend/app/vms.db
 backend/storage/faces/*
 !backend/storage/faces/.gitkeep
 
+#appstorage
+app/*
+
 # Node
 node_modules/
 frontend/node_modules/
