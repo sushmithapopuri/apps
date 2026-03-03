@@ -20,12 +20,13 @@ RUN npm run build
 # Stage 2: Serve the application with Nginx
 FROM nginx:alpine
 
-# Install openssl for SSL certificate generation
-RUN apk add --no-cache openssl
+# Install openssl and curl for SSL certificate generation
+RUN apk add --no-cache openssl curl
 RUN mkdir -p /etc/nginx/ssl && \
+    PUBLIC_IP=$(curl -s ifconfig.me || echo "localhost") && \
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -keyout /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt \
-    -subj "/C=IN/ST=TG/L=HYD/O=VMS/CN=localhost"
+    -subj "/C=IN/ST=TG/L=HYD/O=VMS/CN=$PUBLIC_IP"
 
 # Copy built app to Nginx
 COPY --from=build-stage /app/dist /usr/share/nginx/html
