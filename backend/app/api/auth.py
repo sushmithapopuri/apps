@@ -18,7 +18,7 @@ from ..core.security import (
     SECURITY_SESSION_HOURS,
     ADMIN_SESSION_HOURS
 )
-from ..core.whatsapp import send_whatsapp_otp
+from ..core.sms import send_sms_otp
 
 router = APIRouter()
 
@@ -50,10 +50,10 @@ async def send_otp(phone_number: str, db: Session = Depends(get_db)):
     
     db.commit()
     
-    # Send via WhatsApp
-    await send_whatsapp_otp(phone_number, otp)
+    # Send via Fast2SMS
+    await send_sms_otp(phone_number, otp)
     
-    return {"message": "OTP sent successfully via WhatsApp"}
+    return {"message": "OTP sent successfully via SMS"}
 
 @router.post("/signup", response_model=User)
 async def signup(user: UserCreate, db: Session = Depends(get_db)):
@@ -105,10 +105,12 @@ async def login_request(data: LoginRequest, db: Session = Depends(get_db)):
     db.commit()
     db.commit()
     
-    # Send via WhatsApp
-    await send_whatsapp_otp(data.phone_number, otp)
+    db.commit()
     
-    return {"message": "OTP sent successfully via WhatsApp"}
+    # Send via Fast2SMS
+    await send_sms_otp(data.phone_number, otp)
+    
+    return {"message": "OTP sent successfully via SMS"}
 
 @router.post("/login/verify", response_model=Token)
 async def login_verify(data: LoginVerify, db: Session = Depends(get_db)):

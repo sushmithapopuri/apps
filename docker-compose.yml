@@ -15,8 +15,7 @@ services:
       - DATABASE_URL=sqlite:////app/vms.db
       - VMS_DB_PATH=/app/vms.db
       - VMS_STORAGE_PATH=/app/storage/faces
-      - WHATSAPP_API_URL=https://api.ultramsg.com/your_instance/messages/chat
-      - WHATSAPP_API_KEY=your_token_here
+      - FAST2SMS_API_KEY=your_authorization_key_here
     restart: on-failure:1
 
   frontend:
