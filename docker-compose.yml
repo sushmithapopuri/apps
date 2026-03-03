@@ -9,13 +9,13 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./app/vms.db:/app/vms.db
+      # - ./app/vms.db:/app/vms.db
       - ./app/storage/faces:/app/storage/faces
     environment:
       - DATABASE_URL=sqlite:////app/vms.db
       - VMS_DB_PATH=/app/vms.db
       - VMS_STORAGE_PATH=/app/storage/faces
-    restart: always
+    restart: on-failure:1
 
   frontend:
     build:
@@ -26,6 +26,7 @@ services:
     container_name: vms-frontend
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - backend
     restart: always
