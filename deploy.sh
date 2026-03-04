@@ -134,7 +134,7 @@ sync_files() {
         --exclude '.idea' \
         --exclude '.vscode' \
         --exclude '.dev-pids' \
-        --exclude 'app' \
+        --exclude 'storage' \
         -e "ssh ${SSH_OPTS}" \
         "${PROJECT_DIR}/" "${REMOTE}:${REMOTE_DIR}/" || rc=$?
 

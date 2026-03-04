@@ -14,7 +14,7 @@ import InteractiveCalendar from './components/InteractiveCalendar'
 
 function MainApp() {
     const { user, logout, loading } = useAuth();
-    const [showSignup, setShowSignup] = useState(false);
+    const [authView, setAuthView] = useState({ type: 'login', data: null });
     const [showModal, setShowModal] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [activeAdminTab, setActiveAdminTab] = useState('reports'); // 'reports', 'appointments', 'users'
@@ -27,10 +27,17 @@ function MainApp() {
     if (!user) {
         return (
             <>
-                {showSignup ? (
-                    <Signup onToggle={() => setShowSignup(false)} />
+                {authView.type === 'signup' ? (
+                    <Signup
+                        onToggle={() => setAuthView({ type: 'login', data: null })}
+                        initialPhone={authView.data?.phone}
+                        isOtpVerified={authView.data?.isOtpVerified}
+                    />
                 ) : (
-                    <Login onToggle={() => setShowSignup(true)} />
+                    <Login
+                        onToggle={() => setAuthView({ type: 'signup', data: null })}
+                        onNeedsRegistration={(phone) => setAuthView({ type: 'signup', data: { phone, isOtpVerified: true } })}
+                    />
                 )}
             </>
         );

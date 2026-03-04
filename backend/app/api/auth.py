@@ -18,7 +18,7 @@ from ..core.security import (
     SECURITY_SESSION_HOURS,
     ADMIN_SESSION_HOURS
 )
-from ..core.sms import send_sms_otp
+from ..core.sms import send_otp as send_msg91_otp
 
 router = APIRouter()
 
@@ -50,8 +50,11 @@ async def send_otp(phone_number: str, db: Session = Depends(get_db)):
     
     db.commit()
     
-    # Send via Fast2SMS
-    await send_sms_otp(phone_number, otp)
+    # Send via MSG91
+    success = await send_msg91_otp(phone_number, otp)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to send OTP via SMS provider")
+
     
     return {"message": "OTP sent successfully via SMS"}
 
@@ -91,8 +94,7 @@ async def signup(user: UserCreate, db: Session = Depends(get_db)):
 @router.post("/login/request", status_code=status.HTTP_200_OK)
 async def login_request(data: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(DBUser).filter(DBUser.phone_number == data.phone_number).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not registered")
+    is_registered = user is not None
     
     otp = str(random.randint(1000, 9999))
     otp_entry = db.query(DBOTP).filter(DBOTP.phone_number == data.phone_number).first()
@@ -108,21 +110,28 @@ async def login_request(data: LoginRequest, db: Session = Depends(get_db)):
     
     db.commit()
     
-    # Send via Fast2SMS
-    await send_sms_otp(data.phone_number, otp)
-    
-    return {"message": "OTP sent successfully via SMS"}
+    # Send via MSG91
+    success = await send_msg91_otp(data.phone_number, otp)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to send OTP via SMS provider")
 
-@router.post("/login/verify", response_model=Token)
+    
+    return {"message": "OTP sent successfully via SMS", "is_registered": is_registered}
+
+@router.post("/login/verify")
 async def login_verify(data: LoginVerify, db: Session = Depends(get_db)):
     otp_entry = db.query(DBOTP).filter(DBOTP.phone_number == data.phone_number, DBOTP.otp == data.otp).first()
     if otp_entry:
         user = db.query(DBUser).filter(DBUser.phone_number == data.phone_number).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
         
         db.delete(otp_entry)
         db.commit()
+        
+        if not user:
+            return {
+                "is_registered": False,
+                "message": "OTP verified. Proceed to registration."
+            }
         
         access_token_expires = get_session_duration(user.role)
         access_token = create_access_token(
@@ -130,6 +139,7 @@ async def login_verify(data: LoginVerify, db: Session = Depends(get_db)):
             expires_delta=access_token_expires
         )
         return {
+            "is_registered": True,
             "access_token": access_token, 
             "token_type": "bearer",
             "user_id": user.id,

@@ -61,6 +61,8 @@ type SignupStep = "profile" | "address" | "face" | "review" | "otp";
 
 interface SignupProps {
     onToggle: () => void;
+    initialPhone?: string;
+    isOtpVerified?: boolean;
 }
 
 // ─── Animations ───────────────────────────────────────────────────────
@@ -95,7 +97,7 @@ const steps: { key: SignupStep; label: string }[] = [
 
 // ─── Component ────────────────────────────────────────────────────────
 
-export default function Signup({ onToggle }: SignupProps) {
+export default function Signup({ onToggle, initialPhone, isOtpVerified }: SignupProps) {
     const [step, setStep] = React.useState<SignupStep>("profile");
     const [isLoading, setIsLoading] = React.useState(false);
     const [error, setError] = React.useState("");
@@ -107,7 +109,7 @@ export default function Signup({ onToggle }: SignupProps) {
     // Profile stored values (saved when stepping forward)
     const [profileData, setProfileData] = React.useState<ProfileValues>({
         full_name: "",
-        phone_number: "",
+        phone_number: initialPhone || "",
         email: "",
     });
     const [addressData, setAddressData] = React.useState<AddressValues>({
@@ -190,11 +192,17 @@ export default function Signup({ onToggle }: SignupProps) {
                 face_image: faceImage,
             };
             await api.post("/auth/signup", payload);
-            await api.post("/auth/send-otp", null, {
-                params: { phone_number: profileData.phone_number },
-            });
-            setStep("otp");
-            startTimer();
+
+            if (isOtpVerified) {
+                setSuccess("Registration successful! Redirecting to login…");
+                setTimeout(onToggle, 2000);
+            } else {
+                await api.post("/auth/send-otp", null, {
+                    params: { phone_number: profileData.phone_number },
+                });
+                setStep("otp");
+                startTimer();
+            }
         } catch (err: any) {
             setError(err.response?.data?.detail || "Registration failed");
         } finally {
