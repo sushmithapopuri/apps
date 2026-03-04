@@ -79,7 +79,7 @@ async def signup(user: UserCreate, db: Session = Depends(get_db)):
         email=user.email,
         address=user.address.dict(),
         role=UserRole.VISITOR,
-        is_verified=False,
+        is_verified=True,
         face_image_path=image_path
     )
     db.add(new_user)
@@ -90,8 +90,7 @@ async def signup(user: UserCreate, db: Session = Depends(get_db)):
 @router.post("/login/request", status_code=status.HTTP_200_OK)
 async def login_request(data: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(DBUser).filter(DBUser.phone_number == data.phone_number).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not registered")
+    is_registered = user is not None
     
     otp = str(random.randint(1000, 9999))
     otp_entry = db.query(DBOTP).filter(DBOTP.phone_number == data.phone_number).first()
@@ -110,18 +109,22 @@ async def login_request(data: LoginRequest, db: Session = Depends(get_db)):
     # Send via MSG91
     await send_otp(data.phone_number, otp)
     
-    return {"message": "OTP sent successfully via SMS"}
+    return {"message": "OTP sent successfully via SMS", "is_registered": is_registered}
 
-@router.post("/login/verify", response_model=Token)
+@router.post("/login/verify")
 async def login_verify(data: LoginVerify, db: Session = Depends(get_db)):
     otp_entry = db.query(DBOTP).filter(DBOTP.phone_number == data.phone_number, DBOTP.otp == data.otp).first()
     if otp_entry:
         user = db.query(DBUser).filter(DBUser.phone_number == data.phone_number).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
         
         db.delete(otp_entry)
         db.commit()
+        
+        if not user:
+            return {
+                "is_registered": False,
+                "message": "OTP verified. Proceed to registration."
+            }
         
         access_token_expires = get_session_duration(user.role)
         access_token = create_access_token(
@@ -129,6 +132,7 @@ async def login_verify(data: LoginVerify, db: Session = Depends(get_db)):
             expires_delta=access_token_expires
         )
         return {
+            "is_registered": True,
             "access_token": access_token, 
             "token_type": "bearer",
             "user_id": user.id,

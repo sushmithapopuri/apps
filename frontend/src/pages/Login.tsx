@@ -63,6 +63,7 @@ type LoginStep = "main" | "visitor-methods" | "otp" | "face" | "staff";
 
 interface LoginProps {
     onToggle: () => void;
+    onNeedsRegistration?: (phone: string) => void;
 }
 
 // ─── Animation helpers ────────────────────────────────────────────────
@@ -88,7 +89,7 @@ const slideVariants = {
 
 // ─── Component ────────────────────────────────────────────────────────
 
-export default function Login({ onToggle }: LoginProps) {
+export default function Login({ onToggle, onNeedsRegistration }: LoginProps) {
     const [step, setStep] = React.useState<LoginStep>("main");
     const [phoneNumber, setPhoneNumber] = React.useState("");
     const [isLoading, setIsLoading] = React.useState(false);
@@ -188,6 +189,12 @@ export default function Login({ onToggle }: LoginProps) {
                 phone_number: phoneNumber,
                 otp: data.otp,
             });
+
+            if (response.data.is_registered === false) {
+                if (onNeedsRegistration) onNeedsRegistration(phoneNumber);
+                return;
+            }
+
             login(
                 {
                     id: response.data.user_id,
