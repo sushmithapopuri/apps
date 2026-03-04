@@ -1,12 +1,14 @@
 smartvisit.io {
-    # Serve the frontend SPA
-    root * /srv/frontend
-    file_server
-    try_files {path} /index.html
-
-    # Proxy API requests to the backend
+    # API requests → backend
     handle /api/* {
         reverse_proxy backend:8000
+    }
+
+    # Everything else → frontend SPA
+    handle {
+        root * /srv/frontend
+        try_files {path} /index.html
+        file_server
     }
 
     # Security headers
@@ -18,7 +20,7 @@ smartvisit.io {
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
     }
 
-    # Gzip compression
+    # Compression
     encode gzip zstd
 
     # Logging
@@ -28,7 +30,7 @@ smartvisit.io {
     }
 }
 
-# Redirect www to apex
+# Redirect www → apex
 www.smartvisit.io {
     redir https://smartvisit.io{uri} permanent
 }

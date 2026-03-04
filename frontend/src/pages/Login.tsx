@@ -94,8 +94,16 @@ export default function Login({ onToggle }: LoginProps) {
     const [isLoading, setIsLoading] = React.useState(false);
     const [error, setError] = React.useState("");
     const [timer, setTimer] = React.useState(0);
+    const [cameraReady, setCameraReady] = React.useState(false);
+    const [cameraError, setCameraError] = React.useState("");
     const { login } = useAuth();
     const webcamRef = React.useRef<any>(null);
+
+    const videoConstraints = {
+        width: 640,
+        height: 480,
+        facingMode: "user",
+    };
 
     // Staff login form
     const staffForm = useForm<StaffFormValues>({
@@ -609,13 +617,43 @@ export default function Login({ onToggle }: LoginProps) {
                                             audio={false}
                                             ref={webcamRef}
                                             screenshotFormat="image/jpeg"
-                                            className="aspect-[4/3] w-full object-cover"
-                                            style={{ transform: "scaleX(-1)" }}
+                                            videoConstraints={videoConstraints}
+                                            onUserMedia={() => { setCameraReady(true); setCameraError(""); }}
+                                            onUserMediaError={(err: any) => {
+                                                setCameraReady(false);
+                                                const msg = typeof err === "string" ? err : err?.message || "Camera access denied";
+                                                setCameraError(
+                                                    msg.includes("SSL") || msg.includes("secure") || msg.includes("https")
+                                                        ? "Camera requires HTTPS. Please use a secure connection."
+                                                        : `Camera error: ${msg}`
+                                                );
+                                            }}
+                                            width={640}
+                                            height={480}
+                                            style={{ width: "100%", height: "auto", transform: "scaleX(-1)", display: "block" }}
                                         />
-                                        {/* Scanning overlay */}
-                                        <div className="absolute inset-0 pointer-events-none">
-                                            <div className="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse" style={{ top: "50%" }} />
-                                        </div>
+                                        {/* Loading / error overlay */}
+                                        {!cameraReady && (
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white">
+                                                {cameraError ? (
+                                                    <div className="px-6 text-center">
+                                                        <Scan className="mx-auto mb-3 h-10 w-10 text-destructive opacity-80" />
+                                                        <p className="text-sm text-red-300">{cameraError}</p>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <Loader2 className="mb-3 h-8 w-8 animate-spin text-primary" />
+                                                        <p className="text-sm text-gray-300">Initializing camera…</p>
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                        {/* Scanning line */}
+                                        {cameraReady && (
+                                            <div className="absolute inset-0 pointer-events-none">
+                                                <div className="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse" style={{ top: "50%" }} />
+                                            </div>
+                                        )}
                                     </div>
                                     <p className="text-center text-sm text-muted-foreground">
                                         Align your face within the frame
@@ -624,7 +662,7 @@ export default function Login({ onToggle }: LoginProps) {
                                     <Button
                                         className="w-full"
                                         onClick={handleFaceLogin}
-                                        disabled={isLoading}
+                                        disabled={isLoading || !cameraReady}
                                     >
                                         {isLoading ? (
                                             <>
@@ -644,6 +682,8 @@ export default function Login({ onToggle }: LoginProps) {
                                         className="w-full gap-2 text-muted-foreground"
                                         onClick={() => {
                                             setError("");
+                                            setCameraReady(false);
+                                            setCameraError("");
                                             setStep("visitor-methods");
                                         }}
                                     >

@@ -75,7 +75,7 @@ preflight() {
 #  Ensure Docker & Docker Compose are installed on the remote
 # ---------------------------------------------------------------------------
 setup_remote() {
-    info "Ensuring Docker is installed on the remote server…"
+    info "Ensuring Docker & Compose v2 are installed on the remote server…"
 
     ssh ${SSH_OPTS} "${REMOTE}" bash -s <<'REMOTE_SETUP'
 set -euo pipefail
@@ -83,24 +83,26 @@ set -euo pipefail
 if ! command -v docker &>/dev/null; then
     echo "[REMOTE] Installing Docker…"
     sudo apt-get update -qq
-    sudo apt-get install -y -qq docker.io docker-compose-plugin
+    sudo apt-get install -y -qq docker.io
     sudo systemctl enable --now docker
     sudo usermod -aG docker "$USER"
-    echo "[REMOTE] Docker installed. You may need to re-login for group changes."
+    echo "[REMOTE] Docker installed."
 else
     echo "[REMOTE] Docker is already installed."
 fi
 
-# Ensure docker compose (v2 plugin) or docker-compose (v1) is available
+# Ensure Docker Compose v2 plugin is available
+# docker-compose v1 has a known 'ContainerConfig' KeyError bug with newer Docker engines
 if docker compose version &>/dev/null; then
-    echo "[REMOTE] Docker Compose v2 plugin detected."
-elif command -v docker-compose &>/dev/null; then
-    echo "[REMOTE] docker-compose v1 detected."
+    echo "[REMOTE] Docker Compose v2 plugin OK: $(docker compose version)"
 else
-    echo "[REMOTE] Installing docker-compose…"
-    sudo apt-get install -y -qq docker-compose-plugin 2>/dev/null \
-        || sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
-            -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose
+    echo "[REMOTE] Installing Docker Compose v2 plugin…"
+    COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep -oP '"tag_name": "\K[^"]+' || echo "v2.29.1")
+    sudo mkdir -p /usr/local/lib/docker/cli-plugins
+    sudo curl -SL "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" \
+        -o /usr/local/lib/docker/cli-plugins/docker-compose
+    sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+    echo "[REMOTE] Docker Compose v2 installed: $(docker compose version)"
 fi
 REMOTE_SETUP
 
@@ -116,6 +118,9 @@ sync_files() {
     # Create remote directory if it doesn't exist
     ssh ${SSH_OPTS} "${REMOTE}" "mkdir -p ${REMOTE_DIR}"
 
+    # rsync exit code 23 = partial transfer (e.g. permission denied on some deletes)
+    # This is non-fatal — all source files still sync correctly.
+    local rc=0
     rsync -avz --progress --delete \
         --exclude '.git' \
         --exclude 'node_modules' \
@@ -128,11 +133,18 @@ sync_files() {
         --exclude '.DS_Store' \
         --exclude '.idea' \
         --exclude '.vscode' \
-        --exclude 'app/storage/faces/*' \
+        --exclude '.dev-pids' \
+        --exclude 'app' \
         -e "ssh ${SSH_OPTS}" \
-        "${PROJECT_DIR}/" "${REMOTE}:${REMOTE_DIR}/"
+        "${PROJECT_DIR}/" "${REMOTE}:${REMOTE_DIR}/" || rc=$?
 
-    success "Files synced."
+    if [[ $rc -eq 0 ]]; then
+        success "Files synced."
+    elif [[ $rc -eq 23 ]]; then
+        warn "Files synced (some remote-only files could not be deleted — this is OK)."
+    else
+        error "rsync failed with exit code ${rc}"
+    fi
 }
 
 # ---------------------------------------------------------------------------
@@ -141,29 +153,31 @@ sync_files() {
 deploy() {
     info "Building and starting containers on the remote server…"
 
+    # First, clean up old v1 containers that may conflict
+    ssh ${SSH_OPTS} "${REMOTE}" bash -s <<REMOTE_CLEANUP
+cd ${REMOTE_DIR}
+# Stop and remove everything from previous docker-compose v1 runs
+docker-compose down --remove-orphans 2>/dev/null || true
+# Remove any leftover containers with vms in the name (including hash-prefixed v1 names)
+docker ps -a --format '{{.Names}}' | grep -i vms | xargs -r docker rm -f 2>/dev/null || true
+REMOTE_CLEANUP
+
     ssh ${SSH_OPTS} "${REMOTE}" bash -s <<REMOTE_DEPLOY
 set -euo pipefail
 cd ${REMOTE_DIR}
 
-# Use whichever compose command is available
-if docker compose version &>/dev/null; then
-    COMPOSE="docker compose"
-else
-    COMPOSE="docker-compose"
-fi
-
 echo "[REMOTE] Pulling base images…"
-\$COMPOSE pull --ignore-pull-failures 2>/dev/null || true
+docker compose pull --ignore-pull-failures 2>/dev/null || true
 
 echo "[REMOTE] Building images…"
-\$COMPOSE build --no-cache
+docker compose build --no-cache
 
 echo "[REMOTE] Starting services…"
-\$COMPOSE up -d --force-recreate --remove-orphans
+docker compose up -d --force-recreate --remove-orphans
 
 echo ""
 echo "[REMOTE] === Container Status ==="
-\$COMPOSE ps
+docker compose ps
 echo ""
 echo "[REMOTE] Deploy complete! 🚀"
 REMOTE_DEPLOY
@@ -184,13 +198,8 @@ restart() {
     ssh ${SSH_OPTS} "${REMOTE}" bash -s <<REMOTE_RESTART
 set -euo pipefail
 cd ${REMOTE_DIR}
-if docker compose version &>/dev/null; then
-    docker compose restart
-    docker compose ps
-else
-    docker-compose restart
-    docker-compose ps
-fi
+docker compose restart
+docker compose ps
 REMOTE_RESTART
 
     success "Containers restarted."
@@ -202,7 +211,7 @@ REMOTE_RESTART
 logs() {
     info "Tailing logs from ${REMOTE} (Ctrl+C to stop)…"
     ssh ${SSH_OPTS} -t "${REMOTE}" \
-        "cd ${REMOTE_DIR} && (docker compose logs -f --tail 100 2>/dev/null || docker-compose logs -f --tail 100)"
+        "cd ${REMOTE_DIR} && docker compose logs -f --tail 100"
 }
 
 # ---------------------------------------------------------------------------
@@ -211,7 +220,7 @@ logs() {
 status() {
     info "Container status on ${REMOTE}:"
     ssh ${SSH_OPTS} "${REMOTE}" \
-        "cd ${REMOTE_DIR} && (docker compose ps 2>/dev/null || docker-compose ps)"
+        "cd ${REMOTE_DIR} && docker compose ps"
 }
 
 # ---------------------------------------------------------------------------
