@@ -52,6 +52,7 @@ async def admin_create_user(user: UserCreate, admin_id: int, db: Session = Depen
         address=user.address.dict(),
         role=user.role if user.role else UserRole.EMPLOYEE,
         is_verified=True,
+        is_trusted=True,
         password_reset_required=True,
         face_image_path=image_path
     )
@@ -142,6 +143,7 @@ async def list_all_staff(db: Session = Depends(get_db)):
             "phone_number": u.phone_number, 
             "email": u.email,
             "role": u.role,
+            "is_trusted": u.is_trusted,
             "face_image_path": u.face_image_path
         }
         for u in users
@@ -196,11 +198,47 @@ async def list_visitors(db: Session = Depends(get_db)):
             "phone_number": u.phone_number,
             "email": u.email,
             "is_verified": u.is_verified,
+            "is_trusted": u.is_trusted,
             "face_image_path": u.face_image_path,
             "created_at": u.created_at,
         }
         for u in users
     ]
+
+@router.delete("/users/{user_id}")
+async def delete_user(user_id: int, admin_id: int, db: Session = Depends(get_db)):
+    """Admin-only: remove a user (visitor or staff) from the system."""
+    admin = db.query(DBUser).filter(DBUser.id == admin_id).first()
+    if not admin or admin.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can remove users")
+
+    if user_id == admin_id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+
+    user = db.query(DBUser).filter(DBUser.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Delete associated appointments first
+    db.query(DBAppointment).filter(DBAppointment.visitor_id == user_id).delete()
+    db.delete(user)
+    db.commit()
+    return {"message": f"User '{user.full_name}' ({user.role}) removed successfully"}
+
+@router.patch("/users/{user_id}/trust")
+async def toggle_trust(user_id: int, admin_id: int, db: Session = Depends(get_db)):
+    """Admin or Employee: toggle the trust status of a visitor."""
+    caller = db.query(DBUser).filter(DBUser.id == admin_id).first()
+    if not caller or caller.role not in (UserRole.ADMIN, UserRole.EMPLOYEE):
+        raise HTTPException(status_code=403, detail="Only admins and employees can change trust status")
+
+    user = db.query(DBUser).filter(DBUser.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.is_trusted = not user.is_trusted
+    db.commit()
+    return {"message": f"User '{user.full_name}' is now {'trusted' if user.is_trusted else 'untrusted'}", "is_trusted": user.is_trusted}
 
 @router.get("/proxy-image")
 async def proxy_image(path: str):

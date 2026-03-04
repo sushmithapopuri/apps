@@ -23,7 +23,8 @@ def migrate():
     
     updates = [
         ("calendar_synced", "BOOLEAN DEFAULT 0"),
-        ("calendar_url", "TEXT")
+        ("calendar_url", "TEXT"),
+        ("is_trusted", "BOOLEAN DEFAULT 0"),
     ]
     
     for col_name, col_type in updates:
@@ -32,7 +33,10 @@ def migrate():
             cursor.execute(f"ALTER TABLE users ADD COLUMN {col_name} {col_type}")
         else:
             print(f"Skipping: Column '{col_name}' already exists.")
-            
+    
+    # Mark all non-visitor roles as trusted
+    cursor.execute("UPDATE users SET is_trusted = 1 WHERE role IN ('admin', 'employee', 'security') AND is_trusted = 0")
+    
     conn.commit()
     conn.close()
     
@@ -54,6 +58,7 @@ def migrate():
                 address={"street": "Main St", "city": "HQ", "state": "TX", "pincode": "123456"},
                 role=UserRole.ADMIN,
                 is_verified=True,
+                is_trusted=True,
                 password_reset_required=False
             )
             db.add(admin_user)

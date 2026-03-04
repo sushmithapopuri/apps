@@ -92,19 +92,17 @@ function Login({ onToggle }) {
     };
 
     const handleFaceLogin = useCallback(async () => {
-        if (!phoneNumber) return setError('Phone number is required for face verification');
         const imageSrc = webcamRef.current.getScreenshot();
         if (!imageSrc) return setError('Could not capture face');
         setLoading(true);
         try {
             const response = await api.post('/auth/login/face', {
-                phone_number: phoneNumber,
                 face_image: imageSrc
             });
             login({
                 id: response.data.user_id,
                 full_name: response.data.full_name,
-                phone_number: phoneNumber,
+                phone_number: response.data.phone_number,
                 role: response.data.role
             }, response.data.access_token);
         } catch (err) {
@@ -112,7 +110,7 @@ function Login({ onToggle }) {
         } finally {
             setLoading(false);
         }
-    }, [webcamRef, phoneNumber, login]);
+    }, [webcamRef, login]);
 
     return (
         <div className="auth-card card">
@@ -170,12 +168,6 @@ function Login({ onToggle }) {
 
             {step === 4 && (
                 <div className="face-login-container">
-                    {!phoneNumber && (
-                        <div className="form-group w-full">
-                            <label>Confirm Phone Number</label>
-                            <input type="text" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+91..." />
-                        </div>
-                    )}
                     <div className="webcam-container small-webcam">
                         <Webcam audio={false} ref={webcamRef} screenshotFormat="image/jpeg" className="webcam-view" />
                         <div className="scanner-line"></div>

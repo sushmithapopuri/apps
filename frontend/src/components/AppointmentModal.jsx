@@ -9,7 +9,7 @@ import Webcam from 'react-webcam';
 function AppointmentModal({ onClose, onSuccess, preSelectedVisitor = null, initialTime = null, initialBlocked = false }) {
     const { user } = useAuth();
     const isStaff = user?.role === 'employee' || user?.role === 'admin' || user?.role === 'security';
-    const isHostSelectionAllowed = user?.role === 'admin' || user?.role === 'security';
+    const isHostSelectionAllowed = isStaff; // All staff can choose a host
     const webcamRef = useRef(null);
 
     // Form States

@@ -91,7 +91,7 @@ setup() {
     echo ""
     info "Running database migrations..."
     cd "${BACKEND_DIR}"
-    $PYTHON migrate.py
+    poetry run $PYTHON migrate.py
     success "Database ready."
 
     echo ""
@@ -147,9 +147,12 @@ start_backend() {
     cd "${BACKEND_DIR}"
 
     # Run migrations first
-    $PYTHON migrate.py 2>&1 | while IFS= read -r line; do
+    poetry run $PYTHON migrate.py 2>&1 | while IFS= read -r line; do
         echo -e "  ${CYAN}[migrate]${NC} $line"
     done
+
+    # Export API keys for local development
+    export FAST2SMS_API_KEY="${FAST2SMS_API_KEY:-GYsRM628eDIrtinLE1NaWSlz0FBZCg7pyPJdcT3mxAuvVXfhUkxLGXP6Ja8tpFMHfjOABgskINw7leUi}"
 
     # Start uvicorn in background
     poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload &

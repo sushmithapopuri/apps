@@ -59,7 +59,7 @@ async def send_otp(phone_number: str, db: Session = Depends(get_db)):
 async def signup(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(DBUser).filter(DBUser.phone_number == user.phone_number).first()
     if db_user:
-        raise HTTPException(status_code=400, detail="Phone number already registered")
+        raise HTTPException(status_code=400, detail="Visitor already exists, please login")
 
     image_path = None
     if user.face_image:
@@ -80,6 +80,7 @@ async def signup(user: UserCreate, db: Session = Depends(get_db)):
         address=user.address.dict(),
         role=UserRole.VISITOR,
         is_verified=False,
+        is_trusted=False,
         face_image_path=image_path
     )
     db.add(new_user)
@@ -174,9 +175,14 @@ async def reset_password(data: PasswordReset, db: Session = Depends(get_db)):
 
 @router.post("/login/face", response_model=Token)
 async def login_face(data: FaceLoginRequest, db: Session = Depends(get_db)):
-    user = db.query(DBUser).filter(DBUser.phone_number == data.phone_number).first()
+    if data.phone_number:
+        user = db.query(DBUser).filter(DBUser.phone_number == data.phone_number).first()
+    else:
+        # Mock global search: return the latest user who has a face image enrolled
+        user = db.query(DBUser).filter(DBUser.face_image_path != None).order_by(DBUser.id.desc()).first()
+        
     if not user:
-        raise HTTPException(status_code=404, detail="User not registered")
+        raise HTTPException(status_code=404, detail="User not registered or no face enrollment found")
     
     if not user.face_image_path:
         raise HTTPException(status_code=400, detail="Face identity not enrolled. Please login with OTP and update your profile.")
@@ -198,5 +204,6 @@ async def login_face(data: FaceLoginRequest, db: Session = Depends(get_db)):
         "token_type": "bearer",
         "user_id": user.id,
         "full_name": user.full_name,
+        "phone_number": user.phone_number,
         "role": user.role
     }

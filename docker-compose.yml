@@ -14,7 +14,7 @@ services:
       - DATABASE_URL=sqlite:////app/vms.db
       - VMS_DB_PATH=/app/vms.db
       - VMS_STORAGE_PATH=/app/storage/faces
-      - FAST2SMS_API_KEY=your_authorization_key_here
+      - FAST2SMS_API_KEY=GYsRM628eDIrtinLE1NaWSlz0FBZCg7pyPJdcT3mxAuvVXfhUkxLGXP6Ja8tpFMHfjOABgskINw7leUi
     restart: on-failure:3
 
   # ── Frontend (Build-only container) ──────────────────

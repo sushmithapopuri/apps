@@ -62,6 +62,7 @@ async def employee_book_appointment(appointment: AppointmentCreate, employee_id:
                 email=appointment.visitor_info.email,
                 role=UserRole.VISITOR,
                 is_verified=True, # Verified by staff
+                is_trusted=True,  # Trusted — added by employee
                 address=appointment.visitor_info.address.dict(),
                 face_image_path=image_path
             )
@@ -73,6 +74,11 @@ async def employee_book_appointment(appointment: AppointmentCreate, employee_id:
     if not visitor_id:
         raise HTTPException(status_code=400, detail="Visitor identification required")
 
+    # Determine appointment status based on host
+    employee = db.query(DBUser).filter(DBUser.id == employee_id).first()
+    is_self_host = employee and employee.full_name.lower() == appointment.host_name.strip().lower()
+    appt_status = AppointmentStatus.ACCEPTED if is_self_host else AppointmentStatus.PENDING
+
     new_appt = DBAppointment(
         visitor_id=visitor_id,
         host_name=appointment.host_name,
@@ -80,7 +86,7 @@ async def employee_book_appointment(appointment: AppointmentCreate, employee_id:
         appointment_type=appointment.appointment_type,
         scheduled_time=appointment.scheduled_time,
         duration_minutes=appointment.duration_minutes,
-        status=AppointmentStatus.ACCEPTED,
+        status=appt_status,
         created_at=datetime.utcnow()
     )
     db.add(new_appt)

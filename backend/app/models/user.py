@@ -61,6 +61,7 @@ class UserUpdate(BaseModel):
 class User(UserBase):
     id: int
     is_verified: bool = False
+    is_trusted: bool = False
     password_reset_required: bool = False
     face_image_path: Optional[str] = None
     calendar_synced: bool = False
@@ -75,6 +76,7 @@ class Token(BaseModel):
     password_reset_required: bool = False
     user_id: Optional[int] = None
     full_name: Optional[str] = None
+    phone_number: Optional[str] = None
     role: Optional[UserRole] = None
 
 class LoginRequest(BaseModel):
@@ -93,7 +95,7 @@ class PasswordReset(BaseModel):
     new_password: str
 
 class FaceLoginRequest(BaseModel):
-    phone_number: str
+    phone_number: Optional[str] = None
     face_image: str  # Base64 data from frontend
 
 class OTPVerify(BaseModel):

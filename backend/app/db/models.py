@@ -18,6 +18,7 @@ class DBUser(Base):
     is_verified = Column(Boolean, default=False)
     password_reset_required = Column(Boolean, default=False)
     face_image_path = Column(String, nullable=True)
+    is_trusted = Column(Boolean, default=False)
     calendar_synced = Column(Boolean, default=False)
     calendar_url = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
