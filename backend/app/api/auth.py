@@ -51,7 +51,10 @@ async def send_otp(phone_number: str, db: Session = Depends(get_db)):
     db.commit()
     
     # Send via MSG91
-    await send_msg91_otp(phone_number, otp)
+    success = await send_msg91_otp(phone_number, otp)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to send OTP via SMS provider")
+
     
     return {"message": "OTP sent successfully via SMS"}
 
@@ -107,7 +110,10 @@ async def login_request(data: LoginRequest, db: Session = Depends(get_db)):
     db.commit()
     
     # Send via MSG91
-    await send_msg91_otp(data.phone_number, otp)
+    success = await send_msg91_otp(data.phone_number, otp)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to send OTP via SMS provider")
+
     
     return {"message": "OTP sent successfully via SMS", "is_registered": is_registered}
 

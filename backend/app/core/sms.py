@@ -26,6 +26,10 @@ async def send_otp(phone_number: str, otp: str) -> bool:
 
     # MSG91 expects phone number with country code but no + prefix
     clean_number = phone_number.replace("+", "").strip()
+    
+    # If standard 10 digit Indian number, assume India prefix
+    if len(clean_number) == 10:
+        clean_number = f"91{clean_number}"
 
     try:
         async with httpx.AsyncClient() as client:
