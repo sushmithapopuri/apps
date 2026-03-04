@@ -1,33 +1,60 @@
 version: '3.8'
 
 services:
+  # ── Backend (FastAPI) ────────────────────────────────
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: vms-backend
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     volumes:
-      # - ./app/vms.db:/app/vms.db
-      - ./app/storage/faces:/app/storage/faces
+      - db-data:/app
+      - face-storage:/app/storage/faces
     environment:
       - DATABASE_URL=sqlite:////app/vms.db
       - VMS_DB_PATH=/app/vms.db
       - VMS_STORAGE_PATH=/app/storage/faces
       - FAST2SMS_API_KEY=your_authorization_key_here
-    restart: on-failure:1
+    restart: on-failure:3
 
+  # ── Frontend (Build-only container) ──────────────────
+  # Builds the Vite SPA and copies static files to a shared volume
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=/api/v1  # Using Nginx proxy prefix
+        - VITE_API_URL=/api/v1
     container_name: vms-frontend
+    volumes:
+      - frontend-dist:/srv/frontend
+    restart: "no"
+
+  # ── Caddy (Reverse Proxy + Auto-SSL) ────────────────
+  caddy:
+    image: caddy:2-alpine
+    container_name: vms-caddy
     ports:
       - "80:80"
       - "443:443"
+      - "443:443/udp" # HTTP/3 (QUIC)
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy-data:/data
+      - caddy-config:/config
+      - frontend-dist:/srv/frontend:ro
     depends_on:
-      - backend
+      frontend:
+        condition: service_completed_successfully
+      backend:
+        condition: service_started
     restart: always
+
+volumes:
+  db-data:
+  face-storage:
+  caddy-data: # Stores SSL certificates
+  caddy-config: # Caddy config state
+  frontend-dist: # Shared: frontend builds → caddy serves

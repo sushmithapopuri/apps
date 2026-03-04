@@ -1,4 +1,43 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+/* ────────────────────────────────────────────────────
+   shadcn/ui Theme (CSS custom properties for Tailwind v4)
+   ──────────────────────────────────────────────────── */
+@theme inline {
+  --color-background: hsl(0 0% 100%);
+  --color-foreground: hsl(222.2 84% 4.9%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(222.2 84% 4.9%);
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(222.2 84% 4.9%);
+  --color-primary: hsl(221.2 83.2% 53.3%);
+  --color-primary-foreground: hsl(210 40% 98%);
+  --color-secondary: hsl(210 40% 96.1%);
+  --color-secondary-foreground: hsl(222.2 47.4% 11.2%);
+  --color-muted: hsl(210 40% 96.1%);
+  --color-muted-foreground: hsl(215.4 16.3% 46.9%);
+  --color-accent: hsl(210 40% 96.1%);
+  --color-accent-foreground: hsl(222.2 47.4% 11.2%);
+  --color-destructive: hsl(0 84.2% 60.2%);
+  --color-destructive-foreground: hsl(210 40% 98%);
+  --color-border: hsl(214.3 31.8% 91.4%);
+  --color-input: hsl(214.3 31.8% 91.4%);
+  --color-ring: hsl(221.2 83.2% 53.3%);
+  --radius: 0.5rem;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-border);
+  }
+}
 
 :root {
   /* Material Color Palette - Light Theme */
@@ -650,6 +689,7 @@ tr:hover td {
   border-left-color: var(--danger);
   opacity: 0.8;
 }
+
 /* Appointment List Enhancements */
 .entity-info strong {
   display: block;
@@ -672,7 +712,8 @@ tr:hover td {
 /* Role Selector for User Registration */
 .role-selector {
   display: flex;
-  gap: 1.25rem; /* Increased space between buttons */
+  gap: 1.25rem;
+  /* Increased space between buttons */
   margin-bottom: 1rem;
 }
 
@@ -736,10 +777,25 @@ tr:hover td {
   justify-content: center;
 }
 
-.stat-icon.users { background: #dbeafe; color: #2563eb; }
-.stat-icon.appointments { background: #dcfce7; color: #16a34a; }
-.stat-icon.pending { background: #fef3c7; color: #d97706; }
-.stat-icon.completed { background: #f1f5f9; color: #475569; }
+.stat-icon.users {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.stat-icon.appointments {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.stat-icon.pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.stat-icon.completed {
+  background: #f1f5f9;
+  color: #475569;
+}
 
 .stat-info h3 {
   margin: 0;
@@ -892,9 +948,17 @@ tr:hover td {
   flex-shrink: 0;
 }
 
-.activity-item.checked_in .act-dot { background: var(--success); }
-.activity-item.completed .act-dot { background: var(--primary); }
-.activity-item.rejected .act-dot { background: var(--danger); }
+.activity-item.checked_in .act-dot {
+  background: var(--success);
+}
+
+.activity-item.completed .act-dot {
+  background: var(--primary);
+}
+
+.activity-item.rejected .act-dot {
+  background: var(--danger);
+}
 
 .act-content {
   font-size: 0.8125rem;
@@ -1011,9 +1075,20 @@ tr:hover td {
   border-radius: 4px;
 }
 
-.status-tag.accepted { background: #dcfce7; color: #166534; }
-.status-tag.checked_in { background: #dbeafe; color: #1e40af; }
-.status-tag.completed { background: #f1f5f9; color: #475569; }
+.status-tag.accepted {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-tag.checked_in {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-tag.completed {
+  background: #f1f5f9;
+  color: #475569;
+}
 
 /* Calendar Sync Component Styling */
 .calendar-sync-card {
@@ -1118,7 +1193,8 @@ tr:hover td {
   gap: 1px;
 }
 
-.time-column, .day-column {
+.time-column,
+.day-column {
   background: var(--surface);
 }
 

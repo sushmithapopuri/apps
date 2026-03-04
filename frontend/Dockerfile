@@ -1,4 +1,4 @@
-# Stage 1: Build the React application
+# Build Stage: Build the React + Vite application
 FROM node:20-slim AS build-stage
 
 WORKDIR /app
@@ -17,25 +17,10 @@ ENV VITE_API_URL=$VITE_API_URL
 # Build the application
 RUN npm run build
 
-# Stage 2: Serve the application with Nginx
-FROM nginx:alpine
+# Output Stage: serve built files to the shared volume
+FROM alpine:3.19
 
-# Install openssl and curl for SSL certificate generation
-RUN apk add --no-cache openssl curl
-RUN mkdir -p /etc/nginx/ssl && \
-    PUBLIC_IP=$(curl -s ifconfig.me || echo "localhost") && \
-    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-    -keyout /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt \
-    -subj "/C=IN/ST=TG/L=HYD/O=VMS/CN=$PUBLIC_IP"
+COPY --from=build-stage /app/dist /app/dist
 
-# Copy built app to Nginx
-COPY --from=build-stage /app/dist /usr/share/nginx/html
-
-# Copy custom Nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Expose HTTP and HTTPS ports
-EXPOSE 80 443
-
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# On start, copy built files to the Caddy-served volume and exit
+CMD ["sh", "-c", "cp -r /app/dist/. /srv/frontend/ && echo 'Frontend assets deployed to /srv/frontend' && sleep 3"]

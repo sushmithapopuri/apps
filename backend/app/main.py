@@ -15,9 +15,9 @@ from .models.user import UserRole
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Visitor Management System API",
-    description="Backend for managing visitors in a facility",
-    version="0.1.0"
+    title="SmartVisit API",
+    description="Backend API for SmartVisit — Intelligent Visitor Management",
+    version="1.0.0"
 )
 
 @app.on_event("startup")

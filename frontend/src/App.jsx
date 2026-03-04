@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
-import Login from './pages/Login'
-import Signup from './pages/Signup'
+import Login from './pages/Login.tsx'
+import Signup from './pages/Signup.tsx'
 import AppointmentList from './components/AppointmentList'
 import AppointmentModal from './components/AppointmentModal'
 import ManageUsers from './components/ManageUsers'
@@ -26,13 +26,13 @@ function MainApp() {
 
     if (!user) {
         return (
-            <div className="auth-container">
+            <>
                 {showSignup ? (
                     <Signup onToggle={() => setShowSignup(false)} />
                 ) : (
                     <Login onToggle={() => setShowSignup(true)} />
                 )}
-            </div>
+            </>
         );
     }
 
@@ -51,7 +51,7 @@ function MainApp() {
             </nav>
 
             <header>
-                <h1>Visitor Management System</h1>
+                <h1>SmartVisit</h1>
                 <p>Welcome back, {user.full_name}!</p>
             </header>
 
