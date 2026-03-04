@@ -8,11 +8,11 @@ services:
     expose:
       - "8000"
     volumes:
-      - db-data:/app
+      - db-data:/app/data
       - face-storage:/app/storage/faces
     environment:
-      - DATABASE_URL=sqlite:////app/vms.db
-      - VMS_DB_PATH=/app/vms.db
+      - DATABASE_URL=sqlite:////app/data/vms.db
+      - VMS_DB_PATH=/app/data/vms.db
       - VMS_STORAGE_PATH=/app/storage/faces
       - MSG91_AUTH_KEY=${MSG91_AUTH_KEY}
     restart: on-failure:3
