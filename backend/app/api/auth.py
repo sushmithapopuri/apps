@@ -18,7 +18,7 @@ from ..core.security import (
     SECURITY_SESSION_HOURS,
     ADMIN_SESSION_HOURS
 )
-from ..core.sms import send_otp
+from ..core.sms import send_otp as send_msg91_otp
 
 router = APIRouter()
 
@@ -51,7 +51,7 @@ async def send_otp(phone_number: str, db: Session = Depends(get_db)):
     db.commit()
     
     # Send via MSG91
-    await send_otp(phone_number, otp)
+    await send_msg91_otp(phone_number, otp)
     
     return {"message": "OTP sent successfully via SMS"}
 
@@ -107,7 +107,7 @@ async def login_request(data: LoginRequest, db: Session = Depends(get_db)):
     db.commit()
     
     # Send via MSG91
-    await send_otp(data.phone_number, otp)
+    await send_msg91_otp(data.phone_number, otp)
     
     return {"message": "OTP sent successfully via SMS", "is_registered": is_registered}
 
