@@ -49,7 +49,7 @@ async def send_otp(phone_number: str, otp: str) -> bool:
 
             response = await client.post(
                 f"{MSG91_BASE_URL}/otp",
-                json=payload,
+                params=payload,
                 headers=headers,
                 timeout=15.0,
             )
