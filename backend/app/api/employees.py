@@ -87,6 +87,7 @@ async def employee_book_appointment(appointment: AppointmentCreate, employee_id:
         scheduled_time=appointment.scheduled_time,
         duration_minutes=appointment.duration_minutes,
         status=appt_status,
+        color=appointment.color,
         created_at=datetime.utcnow()
     )
     db.add(new_appt)

@@ -264,6 +264,15 @@ button {
   gap: 0.5rem;
 }
 
+.checkbox-group {
+  margin-bottom: 0.4rem;
+  gap: 0;
+}
+
+.checkbox-group label {
+  gap: 0.75rem;
+}
+
 .form-group label {
   font-size: 0.875rem;
   font-weight: 600;
@@ -285,6 +294,13 @@ textarea {
   font-size: 0.9375rem;
   transition: var(--transition);
   outline: none;
+}
+
+input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
 }
 
 input:focus,
@@ -1313,6 +1329,180 @@ tr:hover td {
   opacity: 0.7;
 }
 
+/* ── Category Tags (Outlook-style) ─────────────── */
+.category-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.category-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.category-tag:hover {
+  border-color: var(--cat-color);
+  background: color-mix(in srgb, var(--cat-color) 8%, white);
+}
+
+.category-tag.active {
+  border-color: var(--cat-color);
+  background: color-mix(in srgb, var(--cat-color) 15%, white);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cat-color) 25%, transparent);
+}
+
+.cat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Inline DateTime Picker (Calendar + Time side by side) ── */
+.date-picker-group {
+  width: 100%;
+}
+
+.date-picker-group .react-datepicker {
+  font-family: inherit !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  background: var(--surface) !important;
+  box-shadow: none !important;
+  width: 100% !important;
+}
+
+.date-picker-group .react-datepicker__month-container {
+  width: auto;
+  flex: 1;
+}
+
+.date-picker-group .react-datepicker__time-container {
+  border-left: 1px solid var(--border) !important;
+  width: 90px !important;
+}
+
+.date-picker-group .react-datepicker__time-container .react-datepicker__time {
+  background: var(--surface) !important;
+}
+
+.date-picker-group .react-datepicker__time-container .react-datepicker__time-box {
+  width: 90px !important;
+}
+
+.date-picker-group .react-datepicker__header {
+  background: var(--primary-light, #eef2ff) !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding-top: 0.5rem !important;
+}
+
+.date-picker-group .react-datepicker__current-month {
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+}
+
+.date-picker-group .react-datepicker__day-name,
+.date-picker-group .react-datepicker__day {
+  width: 2rem !important;
+  line-height: 2rem !important;
+  margin: 0.1rem !important;
+  font-size: 0.8rem !important;
+}
+
+.date-picker-group .react-datepicker__day--selected,
+.date-picker-group .react-datepicker__day--keyboard-selected {
+  background: var(--primary) !important;
+  border-radius: 50% !important;
+  color: white !important;
+}
+
+.date-picker-group .react-datepicker__day--today {
+  font-weight: 700 !important;
+}
+
+.date-picker-group .react-datepicker__time-list-item {
+  font-size: 0.8rem !important;
+  height: auto !important;
+  padding: 5px 8px !important;
+}
+
+.date-picker-group .react-datepicker__time-list-item--selected {
+  background: var(--primary) !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.date-picker-group .react-datepicker__day--disabled {
+  color: #ccc !important;
+}
+
+.date-picker-group .react-datepicker__time-list-item--disabled {
+  color: #ccc !important;
+  cursor: not-allowed !important;
+}
+
+.selected-datetime-preview {
+  margin-top: 0.75rem;
+  padding: 0.6rem 1rem;
+  background: var(--primary-light, #eef2ff);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  color: var(--text);
+}
+
+/* ── Danger Button ────────────────────────────────── */
+.danger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.danger-btn:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+}
+
+.danger-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Form Container Scroll ────────────────────────── */
+.form-container-scroll {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+/* ── Disabled Input ───────────────────────────────── */
+.disabled-input {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  cursor: not-allowed;
+}
+
 
 /* ── Trust Badge ─────────────────────────────────── */
 .trust-badge {
@@ -1341,6 +1531,189 @@ tr:hover td {
   display: flex;
   gap: 0.4rem;
   align-items: center;
+}
+
+/* ── Outlook Style DateTime Picker ────────────────── */
+.outlook-dt-picker {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+  overflow: hidden;
+  margin: 1rem 0;
+}
+
+.picker-header {
+  padding: 12px 16px;
+  border-bottom: 2px solid #3b82f6;
+  /* Blue bottom border for header */
+}
+
+.picker-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.picker-container {
+  display: flex;
+  padding: 16px;
+  position: relative;
+}
+
+.time-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.time-control-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.spin-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.spin-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.spin-btn:hover {
+  color: #3b82f6;
+}
+
+.digit-display {
+  font-size: 2.5rem;
+  font-weight: 500;
+  color: #1f2937;
+  line-height: 1;
+}
+
+.time-separator {
+  font-size: 2rem;
+  font-weight: 500;
+  color: #1f2937;
+  padding-bottom: 5px;
+}
+
+.current-dt-string {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.select-btn {
+  background: #0ea5e9;
+  color: white;
+  border: none;
+  padding: 8px 32px;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.select-btn:hover {
+  background: #0284c7;
+}
+
+.vertical-divider {
+  width: 1px;
+  background: #cbd5e1;
+  margin: 0 16px;
+}
+
+.calendar-section {
+  flex: 1.2;
+}
+
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.nav-arrow {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  padding: 4px;
+}
+
+.nav-arrow:hover {
+  color: #3b82f6;
+}
+
+.month-year-label {
+  font-weight: 600;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  text-align: center;
+}
+
+.weekday-header {
+  color: #3b82f6;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding-bottom: 8px;
+}
+
+.day-cell {
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  padding: 8px 0;
+  cursor: pointer;
+  border-radius: 4px;
+  color: #1f2937;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.day-cell:hover:not(.empty) {
+  background: #f1f5f9;
+}
+
+.day-cell.selected {
+  background: #3b82f6 !important;
+  color: white !important;
+  border-radius: 50%;
+}
+
+.day-cell.empty {
+  cursor: default;
 }
 
 .icon-action-btn {

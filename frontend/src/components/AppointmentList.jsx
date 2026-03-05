@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import { Check, X, Clock as ClockIcon, Edit2 } from 'lucide-react';
+import { Check, X, Clock as ClockIcon, Edit2, Trash2, Pencil } from 'lucide-react';
 
-function AppointmentList({ visitorId }) {
+function AppointmentList({ visitorId, onEditAppointment }) {
     const { user } = useAuth();
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [editingDuration, setEditingDuration] = useState(null);
     const [newDuration, setNewDuration] = useState(60);
-    const [activeTab, setActiveTab] = useState('current'); // 'current' or 'past'
+    const [activeTab, setActiveTab] = useState('current');
 
     const fetchAppointments = async () => {
         try {
@@ -23,7 +23,6 @@ function AppointmentList({ visitorId }) {
             }
 
             const response = await api.get(url);
-            // Sort by time
             const sorted = response.data.sort((a, b) => new Date(a.scheduled_time) - new Date(b.scheduled_time));
             setAppointments(sorted);
         } catch (err) {
@@ -59,7 +58,7 @@ function AppointmentList({ visitorId }) {
     const canManage = user?.role === 'employee' || user?.role === 'admin';
 
     const filteredAppointments = appointments.filter(appt => {
-        const isPast = ['completed', 'rejected', 'cancelled', 'blocked'].includes(appt.status) ||
+        const isPast = ['completed', 'rejected', 'cancelled'].includes(appt.status) ||
             new Date(appt.scheduled_time) < new Date();
         return activeTab === 'past' ? isPast : !isPast;
     });
@@ -93,6 +92,7 @@ function AppointmentList({ visitorId }) {
                     <table>
                         <thead>
                             <tr>
+                                <th></th>
                                 <th>{user?.role === 'visitor' ? 'Host' : 'Visitor'}</th>
                                 <th>Purpose</th>
                                 <th>Time</th>
@@ -104,6 +104,17 @@ function AppointmentList({ visitorId }) {
                         <tbody>
                             {filteredAppointments.map(appt => (
                                 <tr key={appt.id} className={`status-${appt.status}`}>
+                                    <td style={{ width: '6px', padding: 0 }}>
+                                        {appt.color && (
+                                            <div style={{
+                                                width: '4px',
+                                                height: '100%',
+                                                minHeight: '40px',
+                                                background: appt.color,
+                                                borderRadius: '2px'
+                                            }} />
+                                        )}
+                                    </td>
                                     <td>
                                         <div className="entity-info">
                                             {user?.role === 'visitor' ? (
@@ -156,8 +167,25 @@ function AppointmentList({ visitorId }) {
                                                         <button onClick={() => updateStatus(appt.id, 'rejected')} className="icon-btn danger" title="Reject"><X size={16} /></button>
                                                     </>
                                                 )}
-                                                {appt.status === 'accepted' && (
-                                                    <button onClick={() => updateStatus(appt.id, 'cancelled')} className="text-btn danger">Cancel</button>
+                                                {['accepted', 'pending', 'blocked'].includes(appt.status) && (
+                                                    <>
+                                                        {onEditAppointment && (
+                                                            <button
+                                                                onClick={() => onEditAppointment(appt)}
+                                                                className="icon-btn"
+                                                                title="Edit Appointment"
+                                                            >
+                                                                <Pencil size={15} />
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => updateStatus(appt.id, 'cancelled')}
+                                                            className="icon-btn danger"
+                                                            title="Cancel Appointment"
+                                                        >
+                                                            <Trash2 size={15} />
+                                                        </button>
+                                                    </>
                                                 )}
                                             </div>
                                         </td>

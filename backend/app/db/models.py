@@ -39,6 +39,7 @@ class DBAppointment(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     check_in_time = Column(DateTime, nullable=True)
     check_out_time = Column(DateTime, nullable=True)
+    color = Column(String, nullable=True, default=None)  # Employee color-coding
 
     visitor = relationship("DBUser", back_populates="appointments", foreign_keys=[visitor_id])
 

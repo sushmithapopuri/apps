@@ -59,7 +59,7 @@ type OtpFormValues = z.infer<typeof otpSchema>;
 
 // ─── Types ────────────────────────────────────────────────────────────
 
-type LoginStep = "main" | "visitor-methods" | "otp" | "face" | "staff";
+type LoginStep = "main" | "visitor-methods" | "otp-phone" | "otp" | "face" | "staff";
 
 interface LoginProps {
     onToggle: () => void;
@@ -212,11 +212,6 @@ export default function Login({ onToggle, onNeedsRegistration }: LoginProps) {
     };
 
     const handleFaceLogin = React.useCallback(async () => {
-        const pn = phoneNumber || phoneForm.getValues("phone_number");
-        if (!pn) {
-            setError("Phone number is required for face verification");
-            return;
-        }
         const imageSrc = webcamRef.current?.getScreenshot();
         if (!imageSrc) {
             setError("Could not capture face");
@@ -226,14 +221,13 @@ export default function Login({ onToggle, onNeedsRegistration }: LoginProps) {
         setError("");
         try {
             const response = await api.post("/auth/login/face", {
-                phone_number: pn,
                 face_image: imageSrc,
             });
             login(
                 {
                     id: response.data.user_id,
                     full_name: response.data.full_name,
-                    phone_number: pn,
+                    phone_number: response.data.phone_number,
                     role: response.data.role,
                 },
                 response.data.access_token
@@ -243,7 +237,7 @@ export default function Login({ onToggle, onNeedsRegistration }: LoginProps) {
         } finally {
             setIsLoading(false);
         }
-    }, [phoneNumber, phoneForm, login]);
+    }, [login]);
 
     const handleResendOtp = async () => {
         if (timer > 0) return;
@@ -267,13 +261,17 @@ export default function Login({ onToggle, onNeedsRegistration }: LoginProps) {
             title: "Visitor Login",
             description: "Choose your preferred verification method",
         },
+        "otp-phone": {
+            title: "Mobile OTP",
+            description: "Enter your registered phone number to receive a code",
+        },
         otp: {
             title: "Verify Identity",
             description: `Enter the 4-digit code sent to ${phoneNumber}`,
         },
         face: {
             title: "Face Recognition",
-            description: "Align your face within the frame to verify",
+            description: "Align your face within the frame — no phone needed",
         },
         staff: {
             title: "Staff Portal",
@@ -455,6 +453,62 @@ export default function Login({ onToggle, onNeedsRegistration }: LoginProps) {
                                     transition={{ duration: 0.25 }}
                                     className="space-y-4"
                                 >
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="flex h-auto flex-col gap-2 py-6"
+                                            disabled={isLoading}
+                                            onClick={() => {
+                                                setError("");
+                                                setStep("face");
+                                            }}
+                                        >
+                                            <Scan className="h-8 w-8 text-primary" />
+                                            <span className="text-sm font-medium">Face Identity</span>
+                                            <span className="text-xs text-muted-foreground">No phone needed</span>
+                                        </Button>
+
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="flex h-auto flex-col gap-2 py-6"
+                                            disabled={isLoading}
+                                            onClick={() => {
+                                                setError("");
+                                                setStep("otp-phone");
+                                            }}
+                                        >
+                                            <KeyRound className="h-8 w-8 text-primary" />
+                                            <span className="text-sm font-medium">Mobile OTP</span>
+                                            <span className="text-xs text-muted-foreground">Verify via SMS</span>
+                                        </Button>
+                                    </div>
+
+                                    <Button
+                                        variant="ghost"
+                                        className="w-full gap-2 text-muted-foreground"
+                                        onClick={() => {
+                                            setError("");
+                                            setStep("main");
+                                        }}
+                                    >
+                                        <ArrowLeft className="h-4 w-4" />
+                                        Back to Staff Login
+                                    </Button>
+                                </motion.div>
+                            )}
+
+                            {/* ───── OTP Phone Entry ───── */}
+                            {step === "otp-phone" && (
+                                <motion.div
+                                    key="otp-phone"
+                                    variants={slideVariants}
+                                    initial="enter"
+                                    animate="center"
+                                    exit="exit"
+                                    transition={{ duration: 0.25 }}
+                                >
                                     <Form {...phoneForm}>
                                         <form
                                             onSubmit={phoneForm.handleSubmit(handleSendOtp)}
@@ -478,56 +532,29 @@ export default function Login({ onToggle, onNeedsRegistration }: LoginProps) {
                                                 )}
                                             />
 
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    className="flex h-auto flex-col gap-2 py-4"
-                                                    disabled={isLoading}
-                                                    onClick={() => {
-                                                        const pn = phoneForm.getValues("phone_number");
-                                                        if (!pn || pn.length < 10) {
-                                                            phoneForm.setError("phone_number", {
-                                                                message: "Enter phone number first",
-                                                            });
-                                                            return;
-                                                        }
-                                                        setPhoneNumber(pn);
-                                                        setError("");
-                                                        setStep("face");
-                                                    }}
-                                                >
-                                                    <Scan className="h-6 w-6 text-primary" />
-                                                    <span className="text-xs">Face Identity</span>
-                                                </Button>
-
-                                                <Button
-                                                    type="submit"
-                                                    variant="outline"
-                                                    className="flex h-auto flex-col gap-2 py-4"
-                                                    disabled={isLoading}
-                                                >
-                                                    {isLoading ? (
-                                                        <Loader2 className="h-6 w-6 animate-spin" />
-                                                    ) : (
-                                                        <KeyRound className="h-6 w-6 text-primary" />
-                                                    )}
-                                                    <span className="text-xs">Mobile OTP</span>
-                                                </Button>
-                                            </div>
+                                            <Button
+                                                type="submit"
+                                                className="w-full"
+                                                disabled={isLoading}
+                                            >
+                                                {isLoading && (
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                )}
+                                                Send OTP
+                                            </Button>
                                         </form>
                                     </Form>
 
                                     <Button
                                         variant="ghost"
-                                        className="w-full gap-2 text-muted-foreground"
+                                        className="mt-3 w-full gap-2 text-muted-foreground"
                                         onClick={() => {
                                             setError("");
-                                            setStep("main");
+                                            setStep("visitor-methods");
                                         }}
                                     >
                                         <ArrowLeft className="h-4 w-4" />
-                                        Back to Staff Login
+                                        Back to Selection
                                     </Button>
                                 </motion.div>
                             )}

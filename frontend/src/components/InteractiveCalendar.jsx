@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Clock, User } from 'lucide-react';
 import api from '../api/axios';
 
-function InteractiveCalendar({ visitorId, onSlotDoubleClick, refreshTrigger }) {
+function InteractiveCalendar({ visitorId, onSlotDoubleClick, onEventDoubleClick, refreshTrigger }) {
     const [viewDate, setViewDate] = useState(new Date());
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -127,12 +127,19 @@ function InteractiveCalendar({ visitorId, onSlotDoubleClick, refreshTrigger }) {
                                     {/* Absolutely positioned events at exact timeslots */}
                                     {dayAppts.map(appt => {
                                         const style = getApptStyle(appt);
+                                        if (appt.color) {
+                                            style.borderLeftColor = appt.color;
+                                        }
                                         return (
                                             <div
                                                 key={appt.id}
                                                 className={`calendar-event positioned ${appt.status}`}
                                                 style={style}
                                                 title={`${appt.visitor_name || 'Blocked'} — ${appt.purpose} (${appt.duration_minutes}m) [${appt.status}]`}
+                                                onDoubleClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (onEventDoubleClick) onEventDoubleClick(appt);
+                                                }}
                                             >
                                                 <div className="event-info">
                                                     <strong>{appt.status === 'blocked' ? '🚫 Blocked' : appt.visitor_name}</strong>

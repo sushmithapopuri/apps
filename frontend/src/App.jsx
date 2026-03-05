@@ -21,6 +21,7 @@ function MainApp() {
     const [activeEmployeeTab, setActiveEmployeeTab] = useState('appointments'); // 'appointments', 'calendar'
     const [viewMode, setViewMode] = useState('calendar'); // 'list' or 'calendar'
     const [modalInitData, setModalInitData] = useState({ time: null, blocked: false });
+    const [editAppointment, setEditAppointment] = useState(null);
 
     if (loading) return <div className="loading">Loading...</div>;
 
@@ -156,13 +157,25 @@ function MainApp() {
                                     </div>
 
                                     {viewMode === 'list' ? (
-                                        <AppointmentList visitorId={user.id || 1} key={refreshTrigger} />
+                                        <AppointmentList
+                                            visitorId={user.id || 1}
+                                            key={refreshTrigger}
+                                            onEditAppointment={(appt) => {
+                                                setEditAppointment(appt);
+                                                setShowModal(true);
+                                            }}
+                                        />
                                     ) : (
                                         <InteractiveCalendar
                                             visitorId={user.id || 1}
                                             refreshTrigger={refreshTrigger}
                                             onSlotDoubleClick={(time) => {
+                                                setEditAppointment(null);
                                                 setModalInitData({ time, blocked: true });
+                                                setShowModal(true);
+                                            }}
+                                            onEventDoubleClick={(appt) => {
+                                                setEditAppointment(appt);
                                                 setShowModal(true);
                                             }}
                                         />
@@ -183,10 +196,12 @@ function MainApp() {
                     onClose={() => {
                         setShowModal(false);
                         setModalInitData({ time: null, blocked: false });
+                        setEditAppointment(null);
                     }}
                     onSuccess={() => setRefreshTrigger(t => t + 1)}
                     initialTime={modalInitData.time}
                     initialBlocked={modalInitData.blocked}
+                    editAppointment={editAppointment}
                 />
             )}
         </div>

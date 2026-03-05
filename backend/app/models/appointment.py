@@ -35,6 +35,7 @@ class VisitorInfo(BaseModel):
 class AppointmentCreate(AppointmentBase):
     visitor_id: Optional[int] = None
     visitor_info: Optional[VisitorInfo] = None
+    color: Optional[str] = None
 
 class Appointment(AppointmentBase):
     id: int
@@ -42,6 +43,7 @@ class Appointment(AppointmentBase):
     visitor_name: Optional[str] = None
     visitor_phone: Optional[str] = None
     status: AppointmentStatus = AppointmentStatus.PENDING
+    color: Optional[str] = None
     created_at: datetime = datetime.utcnow()
 
     class Config:

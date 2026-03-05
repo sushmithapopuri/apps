@@ -38,6 +38,23 @@ def migrate():
     cursor.execute("UPDATE users SET is_trusted = 1 WHERE role IN ('admin', 'employee', 'security') AND is_trusted = 0")
     
     conn.commit()
+    
+    # 2b. Migrate appointments table – add new columns
+    print("Checking appointments columns...")
+    cursor.execute("PRAGMA table_info(appointments)")
+    appt_columns = {col[1] for col in cursor.fetchall()}
+    
+    appt_updates = [
+        ("color", "TEXT"),
+    ]
+    for col_name, col_type in appt_updates:
+        if col_name not in appt_columns:
+            print(f"Migration: Adding column '{col_name}' to 'appointments' table...")
+            cursor.execute(f"ALTER TABLE appointments ADD COLUMN {col_name} {col_type}")
+        else:
+            print(f"Skipping: Column '{col_name}' already exists in appointments.")
+    
+    conn.commit()
     conn.close()
     
     # 3. Seed Initial Data
